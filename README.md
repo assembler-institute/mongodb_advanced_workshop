@@ -370,11 +370,155 @@ $match: The first stage of the pipeline filters the documents in the sightings c
 
 $out: The second stage of the pipeline writes the filtered documents from the previous stage to a new collection named sightings_2022. If this collection does not exist, it will be created. If it already exists, it will be overwritten. The $out stage must be the last stage in the pipeline.
 
-#### Indexes in MongoDB
+## $cond
+
+In MongoDB, you can use the $cond operator in the aggregate pipeline stage to conditionally return a value based on the result of a logical expression. For example:
+
+```bash
+> db.collection.aggregate([
+   {
+      $project: {
+         name: 1,
+         salary: 1,
+         bonus: {
+            $cond: [
+               { $gte: [ "$salary", 5000 ] },
+               500,
+               0
+            ]
+         }
+      }
+   }
+])
+
+```
+
+This pipeline uses the $project stage to add a new field, bonus, to each document in the collection. The value of the bonus field is calculated using the $cond operator. If the salary is greater than or equal to 5000, the bonus is set to 500, otherwise it is set to 0.
+
+Here's an equivalent example using an if statement:
+
+```bash
+> db.collection.aggregate([
+   {
+      $project: {
+         name: 1,
+         salary: 1,
+         bonus: {
+            $let: {
+               vars: {
+                  condition: { $gte: [ "$salary", 5000 ] }
+               },
+               in: {
+                  $cond: [
+                     "$$condition",
+                     500,
+                     0
+                  ]
+               }
+            }
+         }
+      }
+   }
+])
+```
+
+This pipeline uses the $let operator to declare a variable named condition and assigns to it the result of a comparison expression. The value of the bonus field is then calculated using the $cond operator, with the condition being the value of the condition variable.
+
+## Populate
+
+populate() is a method in MongoDB that is used to fill in references between documents. It's used to retrieve related data from other collections and embed it within the documents of the current collection. This method is available in Mongoose, which is a popular object-document modeling (ODM) library for MongoDB in Node.js.
+
+In MongoDB, data is stored in collections, and each document can have a reference to another document within the same or a different collection. This can be achieved using the ObjectID type, which holds a unique identifier of a document. However, this reference only provides the ID of the related document and not the complete data.
+
+The populate() method allows you to retrieve the related data by using the ObjectID and embed it within the original document. This way, you can have all the required data in a single document and avoid performing multiple database queries.
+
+Here is an example of how you can use populate() in Mongoose:
+
+```bash
+> const express = require('express');
+const mongoose = require('mongoose');
+
+const app = express();
+
+// Connect to the database
+mongoose.connect('mongodb://localhost:27017/mydb', { useNewUrlParser: true });
+
+// Define the schema for a blog post
+const PostSchema = new mongoose.Schema({
+  title: String,
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Author'
+  }
+});
+
+// Define the schema for an author
+const AuthorSchema = new mongoose.Schema({
+  name: String,
+  email: String
+});
+
+// Compile the schemas into models
+const Post = mongoose.model('Post', PostSchema);
+const Author = mongoose.model('Author', AuthorSchema);
+
+// Fetch all blog posts with the related author information
+app.get('/posts', (req, res) => {
+  Post.find()
+    .populate('author')
+    .exec((err, posts) => {
+      if (err) {
+        return res.status(500).send(err);
+      }
+      res.json(posts);
+    });
+});
+
+// Start the server
+app.listen(3000, () => {
+  console.log('Server started on port 3000');
+});
+```
+
+In this example, we have two collections, Post and Author, and a blog post has a reference to its author. The populate() method is used to fetch the related author data for each post and embed it within the post document.
+
+## Exec and Lean Methods in mongoDB
+
+### exec()
+
+exec() method in MongoDB is used to execute a query. This method is used when you want to retrieve data from the database using MongoDB's query syntax. When you call exec() on a query, it will return a Promise that will resolve to the query results. But the result is a Mongoose document, which has a lot of additional functionality over a plain JavaScript object. 
+
+```bash
+> const Person = mongoose.model('Person', personSchema);
+const query = Person.find({ name: 'John Doe' });
+
+query.exec(function (err, person) {
+  if (err) return handleError(err);
+  console.log(person);
+});
+
+```
+### lean()
+
+lean() method in MongoDB is used to retrieve data as plain JavaScript objects rather than MongoDB Documents. When you use the lean() method, MongoDB will return the query results as regular JavaScript objects, which can increase performance, especially for large queries, as the objects returned by lean() are lighter weight than MongoDB Documents. However, the trade-off is that you will lose some of the MongoDB Document specific functionality, such as middleware and virtuals.
+
+```bash
+> const Person = mongoose.model('Person', personSchema);
+const query = Person.find({ name: 'John Doe' }).lean();
+
+query.exec(function (err, person) {
+  if (err) return handleError(err);
+  console.log(person);
+});
+```
+
+If a query is executed with both the exec() and lean() methods, the query will be executed and the returned document will be converted into a plain JavaScript object.
+
+## Indexes in MongoDB
 
 Indexes play a crucial role in improving the performance of queries in MongoDB. They are special data structures that store a small portion of the data in an easy-to-traverse form. <b>Indexes reduce I/O (input/output) operations and enable faster and more efficient searching.</b>
 
-## Key Take Aways
+### Key Take Aways
 
 * Indexes are used to improve and speed up the performance of queries.
 * Reduces I/O (input/output) operations.
