@@ -59,7 +59,7 @@ The db.sales.find() function is used to retrieve documents from the sales collec
 8. Find all documents in the accounts collection where the products array contains the value "CurrencyService".
 
 ```bash
-> db.accounts.find({ products: "CurrencyService" })¡
+> db.accounts.find({ products: "CurrencyService" });
 
 ```
 ### Replace a document
