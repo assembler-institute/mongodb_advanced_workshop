@@ -323,6 +323,26 @@ Here are some examples of how to use these stages in the MongoDB aggregation fra
 
 ```
 
+```bash
+> db.accounts.aggregate([{$match:{limit: 10000}},{$sort: {limit: -1}},{$limit: 3}])
+```
+
+```bash
+> db.sales.aggregate([
+  { $match: { "items.name": "notepad", "purchaseMethod": "In store" } },
+  { $group: { _id: "$clientId" } },
+  { $count: "numClients" }
+])
+```
+
+```bash
+> db.sales.aggregate([
+  { $match: { "items.name": "notepad" } },
+  { $group: { _id: "$_id", purchaseMethodCount: { $sum: { $cond: { if: { $eq: [ "$purchaseMethod", "In store" ] }, then: 1, else: 0 } } } } },
+  { $match: { purchaseMethodCount: { $gt: 0 } } }
+])
+```
+
 The above code performs a series of operations on the sightings collection. It first filters the documents to only those where species_common is "Eastern Bluebird". Then it groups the documents by the location.coordinates field and computes the count of each group. Finally, it sorts the groups based on the number_of_sightings field in descending order and limits the number of documents to 3.
 
 ## Reshaping Data
