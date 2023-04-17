@@ -16,7 +16,7 @@ The db.sales.find() function is used to retrieve documents from the sales collec
 
 ```bash
 > db.sales.find({
-  $or: [{ 'name': 'pens' }, { 'items.tag': 'writing' }]
+  $or: [{ 'item.name': 'pens' }, { 'items.tag': 'writing' }]
 })
 ```
 
